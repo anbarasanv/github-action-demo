@@ -1,12 +1,12 @@
 # demo.yaml
-# This workflow will install Python dependencies, run tests with a variety of
-Python versions
+# This workflow will install Python dependencies, run tests with multiple Python versions
 name: Python app
 on:
   push:
-    branches: [ "main" ]
+    branches: ["main"]
   pull_request:
-    branches: [ "main" ]
+    branches: ["main"]
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -15,20 +15,35 @@ jobs:
       matrix:
         python-version: ["3.8", "3.9", "3.10"]
     steps:
-    - uses: actions/checkout@v3
+    - name: Checkout code
+      uses: actions/checkout@v3
+
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v3
       with:
         python-version: ${{ matrix.python-version }}
+
+    - name: Cache pip dependencies
+      uses: actions/cache@v3
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-
+
     - name: Install dependencies
       run: |
         make install
+
     - name: Lint with pylint
       run: |
         make lint
-    - name: test with pytest
+
+    - name: Run tests with pytest
       run: |
         make test
+
     - name: Format code with Black
       run: |
         make format
+      continue-on-error: true
